@@ -17,14 +17,14 @@ if mqtt_user is not None:
 
 def play_tts(msg):
     pipe = "/tmp/snapcast/soundboard"
-    bashCommand = "espeak "
+    bashCommand = "espeak-ng "
     bashCommand += "'"
     bashCommand += msg
     bashCommand += "' "
     bashCommand += "-vde --stdout | ffmpeg -y -i pipe:0 -f u16le -acodec pcm_s16le -ac 2 -ar 48000 "
     bashCommand += snap_pipe
     print(bashCommand)
-    process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
+    process = subprocess.Popen(bashCommand, stdout=subprocess.PIPE, shell=True)
 
 def on_connect(client, userdata, flags, rc):
     client.subscribe("psa/tts")
