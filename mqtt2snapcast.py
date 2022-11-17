@@ -15,19 +15,22 @@ snap_pipe = os.environ.get('SNAPCAST_FIFO', '/tmp/snapcast/soundboard')
 if mqtt_user is not None:
     mqtt.username_pw_set(mqtt_user, mqtt_pass)
 
-def play_tts(msg):
+def play_tts(msg, lang="de"):
     pipe = "/tmp/snapcast/soundboard"
     bashCommand = "espeak-ng "
     bashCommand += "'"
     bashCommand += msg
     bashCommand += "' "
-    bashCommand += "-vde --stdout | ffmpeg -y -i pipe:0 -f u16le -acodec pcm_s16le -ac 2 -ar 48000 "
+    bashCommand += "-v"
+    bashCommand += lang
+    bashCommand += " --stdout | ffmpeg -y -i pipe:0 -f u16le -acodec pcm_s16le -ac 2 -ar 48000 "
     bashCommand += snap_pipe
     print(bashCommand)
     process = subprocess.Popen(bashCommand, stdout=subprocess.PIPE, shell=True)
 
 def on_connect(client, userdata, flags, rc):
     client.subscribe("psa/tts")
+    client.subscribe("psa/tts/+")
     print("Connected to mqtt with result code " + str(rc))
 
 def on_message(client, userdata, msg):
@@ -35,6 +38,8 @@ def on_message(client, userdata, msg):
     payload = msg.payload.decode()
     if topic == "psa/tts":
         play_tts(payload)
+    if topic != "psa/tts":
+        play_tts(payload, topic.strip("psa/tts/"))
     print("RECEIVED: " + topic + '  ' + payload)
 
 client = mqtt.Client()
